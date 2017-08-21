@@ -26,7 +26,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <math.h>
-
+#include <errno.h>
 #include "bcc_perf_map.h"
 #include "bcc_proc.h"
 #include "bcc_elf.h"
@@ -84,9 +84,14 @@ int bcc_procutils_each_module(int pid, bcc_procutils_modulecb callback,
   snprintf(procmap_filename, sizeof(procmap_filename), "/proc/%ld/maps", (long)pid);
   procmap = fopen(procmap_filename, "r");
 
-  if (!procmap)
-    return -1;
+  if (!procmap) {
+    snprintf(procmap_filename, sizeof(procmap_filename), "/tmp/proc%ld", (long)pid);
+    procmap = fopen(procmap_filename, "r");
 
+    if (!procmap)
+      return -1;
+  }
+  
   do {
     char endline[4096];
     char perm[8], dev[8];
